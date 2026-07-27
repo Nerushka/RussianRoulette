@@ -6,7 +6,9 @@ import telebot
 import time
 from telebot import types
 from supabase import create_client, Client
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from flask import Flask
+
+app = Flask(__name__)
 
 TOKEN = os.getenv('BOT_TOKEN')
 
@@ -845,20 +847,17 @@ def keep_db_alive():
 # Запускаем фоновый поток при старте бота
 threading.Thread(target=keep_db_alive, daemon=True).start()
 
-class SimpleHandler(BaseHTTPRequestHandler):
-
-  def do_GET(self):
-    self.send_response(200)
-    self.end_headers()
-    self.wfile.write(b"Bot is alive!")
+@app.route("/")
+def home():
+  return "Bot is alive!"
 
 
 def run_server():
   port = int(os.environ.get("PORT", 10000))
-  server = HTTPServer(("0.0.0.0", port), SimpleHandler)
-  server.serve_forever()
+  app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
 
 
+# Запуск сервера и бота
 threading.Thread(target=run_server, daemon=True).start()
 
 print("Бот с Supabase запущен...")
